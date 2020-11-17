@@ -88,7 +88,10 @@ with Flow("logging-example") as flow:
 
 # now attach our custom handler to Task B's logger
 task_logger = get_logger("Task B")
-task_logger.addHandler(MyHandler())
+my_handler_obj = MyHandler()
+# Change the level to your required.
+my_handler_obj.setLevel(logging.DEBUG)
+task_logger.addHandler(my_handler_obj)
 
 
 if __name__ == "__main__":
