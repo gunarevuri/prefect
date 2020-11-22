@@ -63,9 +63,6 @@ from prefect import task, Flow
 from prefect.utilities.logging import get_logger
 
 
-class MyHandler(logging.StreamHandler):
-    def emit(self, record):
-        requests.post("http://0.0.0.0:8000/", params=dict(msg=record.msg))
 
 
 @task(name="Task A")
@@ -75,6 +72,12 @@ def task_a():
 
 @task(name="Task B")
 def task_b(x):
+    # Each task independent of other, we should explicitly define the classes(objects) which are using inside of them.
+    class MyHandler(logging.StreamHandler):
+        def emit(self, record):
+            requests.get("http://0.0.0.0:8000/", params=dict(msg=record.msg))
+            # you can define your server url to which send request.And it's a "GET" request.
+        
     logger = prefect.context.get("logger")
     logger.debug("Beginning to run Task B with input {}".format(x))
     y = 3 * x + 1
@@ -88,7 +91,10 @@ with Flow("logging-example") as flow:
 
 # now attach our custom handler to Task B's logger
 task_logger = get_logger("Task B")
-task_logger.addHandler(MyHandler())
+my_handler = MyHandler()
+# We have to set a level for our my_handler object
+my_handler.setLevel(logging.DEBUG)
+task_logger.addHandler(my_handler)
 
 
 if __name__ == "__main__":
